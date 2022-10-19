@@ -18,24 +18,24 @@ def main(args):
     if args.ckpt is not None:
         ckpt = model_zoo(args.ckpt)
         load_weights(distiller, ckpt["state_dict"])
-    logger = build_logger(cfg.logger)
+    #logger = build_logger(cfg.logger)
     checkpoint_callback = pl.callbacks.ModelCheckpoint(
-        filepath=os.getcwd() if args.checkpoint_dir is None else args.checkpoint_dir,
+        filename=args.checkpoint_filename,
         save_top_k=True,
         save_last=True,
         verbose=True,
         monitor=cfg.trainer.monitor,
         mode=cfg.trainer.monitor_mode,
-        prefix=''
+        # prefix=''
     )
     trainer = pl.Trainer(
         gpus=args.gpus,
         max_epochs=cfg.trainer.max_epochs,
         accumulate_grad_batches=args.grad_batches,
-        distributed_backend=args.distributed_backend,
-        checkpoint_callback=checkpoint_callback,
+        #distributed_backend=args.distributed_backend,
+        callbacks=checkpoint_callback,
         val_check_interval=args.val_check_interval,
-        logger=logger
+        #logger=logger
     )
     if args.export_model is None:
         trainer.fit(distiller)
@@ -53,7 +53,7 @@ if __name__ == "__main__":
     parser.add_argument("--gpus", type=int, default=0, help="number of available GPUs")
     parser.add_argument('--distributed-backend', type=str, default="ddp", choices=('dp', 'ddp', 'ddp2'),
                         help='supports three options dp, ddp, ddp2')
-    parser.add_argument("--checkpoint_dir", type=str, default=None, help="path to checkpoint_dir")
+    parser.add_argument("--checkpoint_filename", type=str, default=None, help="path to checkpoint_filename")
     parser.add_argument("--val-check-interval", type=int, default=500, help="validation check interval")
     parser.add_argument("--grad_batches", type=int, default=1, help="number of batches to accumulate")
     parser.add_argument("--ckpt", type=str, default=None, help="path to checkpoint")
