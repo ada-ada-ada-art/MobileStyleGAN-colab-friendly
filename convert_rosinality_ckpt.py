@@ -7,7 +7,7 @@ from core.models.synthesis_network import SynthesisNetwork, SynthesisBlock
 
 
 def extract_mnet(ckpt, ckpt_path):
-    ckpt_mnet = select_weights(ckpt["g"], "style.")
+    ckpt_mnet = select_weights(ckpt["g_ema"], "style.")
     style_dim = ckpt_mnet["1.bias"].size()[0]
     n_layers = len([i for i, _ in enumerate(ckpt_mnet) if f"{i}.bias" in ckpt_mnet])
     mnet = MappingNetwork(style_dim, n_layers)
@@ -20,8 +20,8 @@ def extract_mnet(ckpt, ckpt_path):
 
 
 def extract_snet(ckpt, style_dim, ckpt_path):
-    convs = select_weights(ckpt["g"], "convs.")
-    to_rgbs = select_weights(ckpt["g"], "to_rgbs.")
+    convs = select_weights(ckpt["g_ema"], "convs.")
+    to_rgbs = select_weights(ckpt["g_ema"], "to_rgbs.")
 
     blocks = []
     channels = []
@@ -51,9 +51,9 @@ def extract_snet(ckpt, style_dim, ckpt_path):
     channels.append(c_out)
 
     snet = SynthesisNetwork(size, style_dim, channels=channels)
-    snet.input.load_state_dict(select_weights(ckpt["g"], "input."))
-    snet.conv1.load_state_dict(select_weights(ckpt["g"], "conv1."))
-    snet.to_rgb1.load_state_dict(select_weights(ckpt["g"], "to_rgb1."))
+    snet.input.load_state_dict(select_weights(ckpt["g_ema"], "input."))
+    snet.conv1.load_state_dict(select_weights(ckpt["g_ema"], "conv1."))
+    snet.to_rgb1.load_state_dict(select_weights(ckpt["g_ema"], "to_rgb1."))
     for i, _ in enumerate(snet.layers):
         snet.layers[i].load_state_dict(blocks[i].state_dict())
 
